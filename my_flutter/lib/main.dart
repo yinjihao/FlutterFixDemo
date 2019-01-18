@@ -25,7 +25,6 @@ class MyApp extends StatelessWidget {
 class RandomWords extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
-    // TODO: implement createState
     return new RandomWordState();
   }
 }
@@ -35,13 +34,19 @@ class RandomWordState extends State<RandomWords> {
   final _suggestions = <WordPair>[];
 
   //样式
-  final _biggerFont = const TextStyle(fontSize: 18.0);
+  final _biggerFont = const TextStyle(fontSize: 18.0, color: Colors.black);
+
+  //
+  final _saved = new Set<WordPair>();
 
   Widget _buildSuggestions() {
     return new ListView.builder(
       padding: const EdgeInsets.all(16.0),
+      //对于每个建议的单词都会调用一个itemBuilder，然后将单词对添加到ListTitle行中
+      //在偶数行，改函数会为单词添加一个ListTitleRow
+      //在奇数行，会增加一个下划线
       itemBuilder: (context, i) {
-        //在每一列之前，添加一个1像素的分割线widget
+        //在每一列之前，添加一个1像素的分割线widget，如果是偶数
         if (i.isOdd) {
           return new Divider();
         }
@@ -54,6 +59,31 @@ class RandomWordState extends State<RandomWords> {
           // ...接着再生成10个单词对，然后添加到建议列表
           _suggestions.addAll(generateWordPairs().take(10));
         }
+        return _buildRow(_suggestions[index]);
+      },
+    );
+  }
+
+  Widget _buildRow(WordPair pair) {
+    var alreadySaved = _saved.contains(pair);
+
+    return new ListTile(
+      title: new Text(
+        pair.asPascalCase,
+        style: _biggerFont,
+      ),
+      trailing: new Icon(
+        alreadySaved ? Icons.favorite : Icons.favorite_border,
+        color: alreadySaved ? Colors.red : null,
+      ),
+      onTap: () {
+        setState(() {
+          if (alreadySaved) {
+            _saved.remove(pair);
+          } else {
+            _saved.add(pair);
+          }
+        });
       },
     );
   }
@@ -62,6 +92,10 @@ class RandomWordState extends State<RandomWords> {
   Widget build(BuildContext context) {
     var wordPair = new WordPair.random();
     Text mTextView = new Text(wordPair.asPascalCase);
-    return mTextView;
+    return new Scaffold(
+        appBar: new AppBar(
+          title: new Text("FlutterDemo-单词对"),
+        ),
+        body: _buildSuggestions());
   }
 }
